@@ -44,17 +44,17 @@ export class SyscodeService {
   } // detail end
 
   // 删除
-  async delete(id): Promise<any | undefined> {
+  async delete(id): Promise<boolean> {
     try {
       const sql = `UPDATE  t_b_sys_code SET dataStatus=0 where id=${id}`;
 
-      const res = await sequelize.query(sql, {
-        type: Sequelize.QueryTypes.SELECT, // 查询方式
-        raw: true, // 是否使用数组组装的方式展示结果
+      const [other, row] = await sequelize.query(sql, {
+        type: Sequelize.QueryTypes.UPDATE, // 查询方式
+        raw: false, // 是否使用数组组装的方式展示结果
         logging: true, // 是否将 SQL 语句打印到控制台，默认为 true
       });
 
-      return { code: 200, data: res, message: '' };
+      return row > 0;
     } catch (error) {
       throw error;
     }
@@ -67,27 +67,22 @@ export class SyscodeService {
         VALUES(${getCustomId()},'${SysCodeDTO.typeCode}', '${
         SysCodeDTO.sysCode
       }', '${SysCodeDTO.sysName}', '${SysCodeDTO.remark}')`;
-      const res = await sequelize.query(sql, {
-        type: Sequelize.QueryTypes.SELECT, // 查询方式
+      const [id, ,] = await sequelize.query(sql, {
+        type: Sequelize.QueryTypes.INSERT, // 查询方式
         raw: false, // 是否使用数组组装的方式展示结果
         logging: true, // 是否将 SQL 语句打印到控制台，默认为 true
       });
-      console.log('=========');
-      console.log(res);
-      console.log('=========');
-      return res;
+      return { id };
     } catch (error) {
       throw error;
     }
   } //save end
 
   //  是否已经存在
-  async isHas(
-    typeCode: string,
-    sysCode: string,
-    sysName: string,
-  ): Promise<boolean> {
+  async check(SysCodeDTO): Promise<boolean> {
     try {
+      const { typeCode, sysCode, sysName } = SysCodeDTO;
+
       const sql = `SELECT id FROM t_b_sys_code WHERE typeCode='${typeCode}' AND sysCode='${sysCode}'`;
       const res = await sequelize.query(sql, {
         type: Sequelize.QueryTypes.SELECT, // 查询方式

@@ -18,7 +18,7 @@ export class SyscodeController {
     const { save, check } = syscodeService;
     const checkResult = await check(body);
     if (!checkResult) {
-      return { code: 400, message: '数据已存在，不可重复添加', data: null };
+      return '数据已存在，不可重复添加';
     }
     return save(body);
   }

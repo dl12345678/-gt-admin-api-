@@ -12,6 +12,7 @@ export class SyscodeController {
     return this.syscodeService.list();
   }
 
+  // 保存接口
   @Post('v1/syscodes')
   async save(@Body() body: SysCodeDTO) {
     const { syscodeService } = this;
@@ -23,11 +24,13 @@ export class SyscodeController {
     return save(body);
   }
 
+  // 详情接口
   @Get('v1/syscodes/:id')
   detail(@Param() params) {
     return this.syscodeService.detail(params.id);
   }
 
+  // 删除接口
   @Delete('v1/syscodes/:id')
   delete(@Param() params) {
     return this.syscodeService.delete(params.id);

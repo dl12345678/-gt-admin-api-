@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { plainToClass } from 'class-transformer';
+import * as Sequelize from 'sequelize';
 
-import * as Sequelize from 'sequelize'; // 引入 Sequelize 库
-import sequelize from '../../database/sequelize'; // 引入 Sequelize 实例
+// sql 执行辅助类
+import { execute } from '../../database/sequelizeHelper';
 
 import { SysCodeDTO } from '../../dto/syscode/syscode.dto';
 import { getCustomId } from '../../utils/customId';
@@ -10,15 +11,10 @@ import { getCustomId } from '../../utils/customId';
 @Injectable()
 export class SyscodeService {
   // 查询syscode列表 - 不进行分页
-  async list(): Promise<SysCodeDTO[]> {
+  async list(): Promise<any> {
     try {
       const sql = `SELECT id,typeCode,sysCode,sysName,remark FROM  t_b_sys_code WHERE dataStatus=1`;
-
-      const res = await sequelize.query(sql, {
-        type: Sequelize.QueryTypes.SELECT, // 查询方式
-        raw: true, // 是否使用数组组装的方式展示结果
-        logging: true, // 是否将 SQL 语句打印到控制台，默认为 true
-      });
+      const res = await execute({ sql });
 
       return plainToClass(SysCodeDTO, res);
     } catch (error) {
@@ -30,12 +26,7 @@ export class SyscodeService {
   async detail(id): Promise<SysCodeDTO> {
     try {
       const sql = `SELECT id,typeCode,sysCode,sysName,remark FROM  t_b_sys_code where id=${id}`;
-
-      const res = await sequelize.query(sql, {
-        type: Sequelize.QueryTypes.SELECT, // 查询方式
-        raw: true, // 是否使用数组组装的方式展示结果
-        logging: true, // 是否将 SQL 语句打印到控制台，默认为 true
-      });
+      const res = await execute({ sql });
 
       return plainToClass(SysCodeDTO, res[0]);
     } catch (error) {
@@ -47,11 +38,10 @@ export class SyscodeService {
   async delete(id): Promise<boolean> {
     try {
       const sql = `UPDATE  t_b_sys_code SET dataStatus=0 where id=${id}`;
-
-      const [other, row] = await sequelize.query(sql, {
-        type: Sequelize.QueryTypes.UPDATE, // 查询方式
-        raw: false, // 是否使用数组组装的方式展示结果
-        logging: true, // 是否将 SQL 语句打印到控制台，默认为 true
+      const [other, row] = await execute({
+        sql,
+        type: Sequelize.QueryTypes.UPDATE,
+        raw: false,
       });
 
       return row > 0;
@@ -67,11 +57,13 @@ export class SyscodeService {
         VALUES(${getCustomId()},'${SysCodeDTO.typeCode}', '${
         SysCodeDTO.sysCode
       }', '${SysCodeDTO.sysName}', '${SysCodeDTO.remark}')`;
-      const [id, ,] = await sequelize.query(sql, {
-        type: Sequelize.QueryTypes.INSERT, // 查询方式
-        raw: false, // 是否使用数组组装的方式展示结果
-        logging: true, // 是否将 SQL 语句打印到控制台，默认为 true
+
+      const [id, ,] = await execute({
+        sql,
+        type: Sequelize.QueryTypes.INSERT,
+        raw: false,
       });
+
       return { id };
     } catch (error) {
       throw error;
@@ -84,19 +76,11 @@ export class SyscodeService {
       const { typeCode, sysCode, sysName } = SysCodeDTO;
 
       const sql = `SELECT id FROM t_b_sys_code WHERE typeCode='${typeCode}' AND sysCode='${sysCode}'`;
-      const res = await sequelize.query(sql, {
-        type: Sequelize.QueryTypes.SELECT, // 查询方式
-        raw: true, // 是否使用数组组装的方式展示结果
-        logging: true, // 是否将 SQL 语句打印到控制台，默认为 true
-      });
+      const res = await execute({ sql });
 
       if (res.length == 0) {
         const _sql = `SELECT id FROM t_b_sys_code WHERE typeCode='${typeCode}' AND sysCode='${sysCode}' AND sysName='${sysName}'`;
-        const res = await sequelize.query(_sql, {
-          type: Sequelize.QueryTypes.SELECT, // 查询方式
-          raw: true, // 是否使用数组组装的方式展示结果
-          logging: true, // 是否将 SQL 语句打印到控制台，默认为 true
-        });
+        const res = await execute({ sql: _sql });
 
         if (res.length > 0) {
           return true;
